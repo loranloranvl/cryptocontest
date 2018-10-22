@@ -42,7 +42,7 @@ def destructure(file_data):
     data['file_encrypted'] = file_data[end_key + 4:end_file]
     data['digest0'] = file_data[end_file:end_file + 32]
     data['init_info'] = file_data[end_file + 32:end_file + 32 + 4 + 64 + 4 + 6]
-    data['digest1'] = file_data[end_file + 110:]
+    data['digest1'] = file_data[end_file + 110:end_file + 142]
 
     return (data, end_file)
 

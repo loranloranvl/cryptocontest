@@ -1,11 +1,20 @@
 import time
 import sys
+import csv
 from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
 from gmssl import sm2, sm3, func
 
 # require info from the client
 # info length: 4 + 64 + 4 + 6
-info = {'time_stamp': b'[\xcb\x05\xcc', 'ip_addr': b'\xc0\xa8\x00h', 'id': b'(\xc2\xddk\x0fb', 'signature': b'\x0fvRT\xe28\xa4\xe6\x02\xbed\x03R\xb3\xae\xd3nt/\xb8\xe8\xa2N)\x07\xbe\xa06\x08\xf6\xc9\x0e\x8fCg\x81Dx\xc7\x1c\x8c\xb9\xad\x99\xf9\xda\xf6\x83yPX\x8aM\xc3\x92%\xe9\xef3\x80\xbd\x01\x16\xfb'}
+with open('database/visitors.csv') as file:
+    prev_visitor = list(csv.reader(file))[-1]
+
+info = {
+    'time_stamp': eval(prev_visitor[0]), 
+    'signature': eval(prev_visitor[1]),
+    'ip_addr': eval(prev_visitor[2]),
+    'id': eval(prev_visitor[3])
+}
 
 file_path = sys.argv[1]
 print('chaining', file_path)

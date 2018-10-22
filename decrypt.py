@@ -1,9 +1,9 @@
+import sys
 import math
 import time
 import socket
 import csv
-from random import randint
-from uuid import getnode
+import random
 from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
 from gmssl import sm2, sm3, func
 
@@ -25,15 +25,17 @@ sm4_key = sm2_crypt.decrypt(data['sm4_key'])
 
 # verify digestn
 lf = len(file_enc)
-if sm3.hash(file_enc[lf - 142:lf - 32]) != file_enc[lf - 32:].hex():
+if sm3.hash(file_enc[lf - 142:lf - 32]) != file_enc[lf - 32:]:
     raise Exception('block digest unmatch')
     # clear buffer and request again
     pass
 else:
     visited = data['flags'][0] >= 8 * 16
+    prev_info = func.parse_info(file_enc[lf - 110:lf - 32])
     if visited:
-        info = func.parse_info(file_enc[lf - 110:lf - 32])
-        prev_signature = info['signature']
+        prev_signature = prev_info['signature']
+        prev_id = prev_info['id']
+        prev_pubkey = None
 
         # verify the previous visitor's signature
         # this shall be done by the server
@@ -41,6 +43,34 @@ else:
         with open('database/keypairs.csv') as file:
             kps = csv.reader(file)
             for kp in kps:
+                if kp[0] == prev_id:
+                    prev_pubkey = kp[2]
+                    break
+
+        assert prev_pubkey != None, 'signer not found'
+
+        sm2_verify = sm2.CryptSM2(public_key=prev_pubkey, private_key='')
+        prev_sign_data = file_enc[lf - 110:lf - 106] + file_enc[lf - 42:lf - 32]
+        assert sm2_verify.verify(prev_signature, prev_sign_data)
+    
+    # choose a visitor randomly from the database
+    with open('database/keypairs.csv') as file:
+        visitors = list(csv.reader(file))
+    visitor = random.choice(visitors) #[id, private, public]
+
+    ip_addr = socket.gethostbyname(socket.gethostname())
+    my_info = {
+        'time_stamp': int(time.time()).to_bytes(4, endianness),
+        'signature': b'',
+        'ip_addr': b''.join([int(i).to_bytes(1, endianness) for i in ip_addr.split('.')]),
+        'id': bytes.fromhex(visitor[0])
+    }
+    sm2_sign = sm2.CryptSM2(public_key='', private_key=visitor[1])
+    random_hex_str = func.random_hex(sm2_crypt.para_len)
+    sign_data = my_info['time_stamp'] + my_info['ip_addr'] + my_info['id']
+    my_info['signature'] = bytes.fromhex(sm2_sign.sign(sign_data, random_hex_str))
+
+
                 
     # decypt file
     # crypt_sm4 = CryptSM4()
@@ -50,16 +80,8 @@ else:
     #   file.write(file_data)
 
     # update the visitor's chain
-    # post the info dict ↓ to the server
-    sign_key = '0ea157aedb10bd2ae2d651b89f268f48c889f11272710332eaf76a15fc2d1babed'
-    sm2_sign = sm2.CryptSM2(public_key='', private_key=sign_key)
-    random_hex_str = func.random_hex(sm2_sign.para_len)
-    print(sm2_sign.sign(init_block, random_hex_str))
-    ip_addr = socket.gethostbyname(socket.gethostname())
-    info = {
-        'time_stamp': int(time.time()).to_bytes(4, endianness),
-        'signature': bytes.fromhex(sm2_sign.sign(init_block, random_hex_str)),
-        'ip_addr': b''.join([int(i).to_bytes(1, endianness) for i in ip_addr.split('.')]),
-        'mac_addr': getnode().to_bytes(6, endianness)
-    }
-    print(repr(info))
+    # post the my_info dict to the server
+    with open('database/visitors.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([repr(my_info[key]) for key in my_info])
+    

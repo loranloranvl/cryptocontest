@@ -58,11 +58,12 @@ assert len(data['digest0']) == 32
 
 # initial information
 ip_addr = socket.gethostbyname(socket.gethostname())
+creator_id = 0
 init_info = {
     'time_stamp': int(time.time()).to_bytes(4, endianness),
     'public_key': bytes.fromhex(public_key),
     'ip_addr': b''.join([int(i).to_bytes(1, endianness) for i in ip_addr.split('.')]),
-    'id': 0.to_bytes(6, endianness)
+    'id': creator_id.to_bytes(6, endianness)
 }
 data['init_info'] = func.cat_bytes(init_info)
 assert len(data['init_info']) == 4 + 64 + 4 + 6

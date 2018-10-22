@@ -7,6 +7,7 @@ file_path = sys.argv[1]
 print('analyzing', file_path)
 with open(file_path, 'rb') as file:
     file_enc = file.read()
+    print('total {} bytes'.format(len(file_enc)))
 
 data, end_file = func.destructure(file_enc)
 visited = data['flags'][0] >= 8 * 16
@@ -27,7 +28,7 @@ for i in range(end_file + 32, len(file_enc), 110):
         person_str, role_str = 'creator', 'public key'
     else:
         person_str, role_str = 'visitor', 'signature'
-    ip_str = '.'.join([str((info['ip_addr'] >> i) % 256) for i in range(0, 32, 8)])
+    ip_str = '.'.join([str((info['ip_addr'] >> i) % 256) for i in range(0, 32, 8)][::-1])
     time_str = time.asctime(time.localtime(info['time_stamp']))
     print('{} {} at {}'.format(person_str, ip_str, time_str))
     print('{} beginning with {}'.format(role_str, info['signature'][0:4].upper()))
