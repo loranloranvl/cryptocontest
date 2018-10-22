@@ -138,3 +138,6 @@ def sm3_kdf(z, klen): # z为16进制表示的比特串（str），klen为密钥�
         ha = ha + sm3_hash(msg)
         ct += 1
     return ha[0: klen * 2]
+
+def hash(msg):
+    return bytes.fromhex(sm3_hash([i for i in msg]))

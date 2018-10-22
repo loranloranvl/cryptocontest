@@ -42,6 +42,25 @@ class CryptSM2(object):
             k = k << 1
         return self._convert_jacb_to_nor(Temp)
 
+    def _kg2(self, k, Point):  # kP运算
+        mask_str = '8'
+        for i in range(self.para_len - 1):
+            mask_str += '0'
+        mask = int(mask_str, 16)
+        Temp = Point
+        flag = False
+        for n in range(self.para_len * 4):
+            if (flag):
+                Temp = self._double_point(Temp)
+            if (k & mask) != 0:
+                if (flag):
+                    Temp = self._add_point(Temp, Point)
+                else:
+                    flag = True
+                    Temp = Point
+            k = k << 1
+        return self._convert_jacb_to_nor(Temp)
+
     def _double_point(self, Point):  # 倍点
         l = len(Point)
         len_2 = 2 * self.para_len
