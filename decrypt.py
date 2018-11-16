@@ -210,6 +210,8 @@ class QtGui(QWidget):
 
         self.setLayout(vbox)
 
+        self.step = 0
+
         self.setGeometry(500, 250, 900, 500)
         self.setWindowTitle('D3CRYPT decrypter')
         self.setWindowIcon(QIcon('img/key.png'))
