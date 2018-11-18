@@ -1,6 +1,6 @@
 import base64
 import binascii
-from gmssl import func, sm2
+from cryptocontest.gmssl import func, sm2
 
 if __name__ == '__main__':
     private_key = '00B9AB0B828FF68872F21A837FC303668428DEA11DCD1B24429D0C99E24EED83D5'

@@ -1,0 +1,7 @@
+2018-11-18 23:42:21,694 - crypto server established
+2018-11-18 23:42:25,399 - the server received {"mode": "REGISTER", "username": "loran", "pubkey": "b2be3bb67aefa6e6bb23f7ad8ab13bb25b14e85202c88495187de09648bc65373b7636733cd7d5cb46ba7bdaa3e8add1de72aced20fa9196916450d5a638874d"}
+2018-11-18 23:42:25,483 - loran registered with pubkey b2be3bb67aefa6e6bb23f7ad8ab13bb25b14e85202c88495187de09648bc65373b7636733cd7d5cb46ba7bdaa3e8add1de72aced20fa9196916450d5a638874d
+2018-11-18 23:42:25,485 - the server sent {"status": "200", "msg": "successfully registered"}
+2018-11-18 23:42:27,923 - the server received {"mode": "LOGIN", "username": "loran", "timeval": "1542555747", "signature": "0b68206198f0f2f84583fbbb497b6695d5cd9abc68efb9824008c91b4eb3ef8f5472fde3bedc1d2f3225286d005c00dbc5c0532a18cade17f8e75a149830210e"}
+2018-11-18 23:42:27,948 - loran logged in
+2018-11-18 23:42:27,951 - the server sent {"status": "200", "msg": "successfully logged in", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"}
