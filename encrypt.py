@@ -3,6 +3,8 @@ import time
 import socket
 import sys
 import ecckeygen
+import random
+import string
 from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
 from gmssl import sm2, sm3, func
 

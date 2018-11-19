@@ -3,12 +3,21 @@ import auth
 import json
 import socket
 import jwt
-import time
-import sys
 import argparse
 import encrypt
 import json
 import pre
+from gmssl import sm2
+
+success_res = json.dumps({
+    'status': '200',
+    'msg': ''
+})
+
+error_res = lambda msg: json.dumps({
+    'status': '401',
+    'msg': msg
+})
 
 parser = argparse.ArgumentParser(description='chatroom server')
 parser.add_argument('-p', metavar='PORT', type=int, default=51742,
@@ -38,113 +47,115 @@ while True:
             j_parsed['timeval'], j_parsed['signature'])
         if address not in clients.values():
             clients[j_parsed['username']] = address
-    # else:
-    #     try: 
-    #         claims = jwt.decode(j_parsed['jwt'].encode('ascii'), 
-    #             auth.secret, algorithm='HS256')
-    #     except:
-    #         res_data = error_res('you have not logged in')
-    #     else:
-    #         if mode == 'UP':
-    #             file_length = int(j_parsed['length'])
-    #             file_name = j_parsed['name']
-    #             file_data = b''
-    #             logging.info('receiving file from {}:{}'.format(*address))
+    else:
+        try: 
+            claims = jwt.decode(j_parsed['jwt'].encode('ascii'), 
+                auth.jwt_secret, algorithm='HS256')
+        except:
+            res_data = error_res('you have not logged in')
+        else:
+            if mode == 'UP':
+                file_length = int(j_parsed['length'])
+                file_name = j_parsed['name']
+                file_data = b''
+                res_data = json.dumps({
+                    'status': '201',
+                    'msg': 'ready'    
+                })
+                sock.sendto(res_data.encode('ascii'), address)
+                logging.info('receiving file from {}:{}'.format(*address))
 
-    #             # collect file fragments
-    #             while len(file_data) < file_length:
-    #                 file_progress = '\x1b[2K\rcollecting {}: {}/{} bytes %{:.2f}'
-    #                 percent = 100 * len(file_data) / file_length
-    #                 print(file_progress \
-    #                     .format(file_name, len(file_data), file_length, percent), end='')
+                # collect file fragments
+                while len(file_data) < file_length:
+                    file_progress = '\x1b[2K\rcollecting {}: {}/{} bytes   % {:.2f}'
+                    percent = 100 * len(file_data) / file_length
+                    print(file_progress \
+                        .format(file_name, len(file_data), file_length, percent), end='')
 
-    #                 file_frag, up_addr = sock.recvfrom(MAX_BYTES)
-    #                 if address == up_addr:
-    #                     file_data += file_frag
-    #             print('\x1b[2K', end='\r')
-    #             logging.info('{} received total length {} bytes' \
-    #                 .format(file_name, file_length))
+                    file_frag, up_addr = sock.recvfrom(MAX_BYTES)
+                    if address == up_addr:
+                        file_data += file_frag
+                print('\x1b[2K', end='\r')
+                logging.info('{} received total length {} bytes' \
+                    .format(file_name, file_length))
 
-    #             # encrypt to .enc file
-    #             enc_result = encrypt.encrypt(file_data)
-    #             with open('document/%s.enc' % file_name, 'wb') as f:
-    #                 f.write(enc_result['enc'])
+                # encrypt to .enc file
+                enc_result = encrypt.encrypt(file_data)
+                with open('documents/%s.enc' % file_name, 'wb') as f:
+                    f.write(enc_result['enc'])
 
-    #             # update database
-    #             sql = """
-    #                 INSERT INTO Files (Filename, Uploader, Pubkey, Pvtkey, length)"
-    #                 VALUES ('{}', '{}', '{}', '{}')
-    #             """.format(file_name, claims['username'], 
-    #                     enc_result['pubkey'], enc_result['pvtkey'], file_length)
-    #             cursor.execute(sql)
-    #             db.commit()
-    #             logging.info('database file list updated')
-    #             res_data = success_res
+                # update database
+                sql = """
+                    INSERT INTO Files (Filename, Uploader, Pubkey, Pvtkey, length)
+                    VALUES ('{}', '{}', '{}', '{}', '{}')
+                """.format(file_name, claims['username'], 
+                        enc_result['pubkey'], enc_result['pvtkey'], file_length)
+                pre.insert(sql)
+                logging.info('database file list updated')
+                res_data = success_res
 
-    #         elif mode == 'DOWN':
-    #             file_name = j_parsed['name']
-    #             sql = "SELECT Pvtkey, Length FROM Files WHERE FileName='%s'" % file_name
-    #             cursor.execute(sql)
-    #             db.commit()
-    #             selected = cursor.fetchall()[0]
-    #             file_length = selected[1]
+            elif mode == 'DOWN':
+                file_name = j_parsed['name']
+                sql = "SELECT Pvtkey, Length FROM Files WHERE FileName='%s'" % file_name
+                selected = pre.select(sql)[0]
+                file_length = selected[1]
 
-    #             # encrypt file-pvt key with user's pubkey
-    #             sm2_crypt = sm2.CryptSM2(public_key=claims['pubkey'], private_key='')
+                # encrypt file-pvt key with user's pubkey
+                sm2_crypt = sm2.CryptSM2(public_key=claims['pubkey'], private_key='')
 
-    #             res_data = json.dumps({
-    #                 'status': '200',
-    #                 'enc_pvtkey': sm2_crypt.encrypt(selected[0]),
-    #                 'length': file_length
-    #             })
-    #             sock.sendto(res_data.encode('ascii'), address)
+                res_data = json.dumps({
+                    'status': '200',
+                    'enc_pvtkey': sm2_crypt.encrypt(selected[0]),
+                    'length': file_length
+                })
+                sock.sendto(res_data.encode('ascii'), address)
 
-    #             # fragment and send files
-    #             sent_len = 0
-    #             with open('document/%s.enc' % file_name, 'rb') as f:
-    #                 while sent_len < file_length:
-    #                     print(file_progress \
-    #                         .format(file_name, len(file_data), file_length, percent), end='')
-    #                     sock.sendto(f.read(MAX_BYTES), address) 
-    #                     sent_len += MAX_BYTES
-    #             print('\x1b[2K', end='\r')
-    #             logging.info('{} sent total length {} bytes' \
-    #                 .format(file_name, file_length))
-    #             res_data = success_res
+                # fragment and send files
+                sent_len = 0
+                with open('documents/%s.enc' % file_name, 'rb') as f:
+                    while sent_len < file_length:
+                        print(file_progress \
+                            .format(file_name, len(file_data), file_length, percent), end='')
+                        sock.sendto(f.read(MAX_BYTES), address) 
+                        sent_len += MAX_BYTES
+                print('\x1b[2K', end='\r')
+                logging.info('{} sent total length {} bytes' \
+                    .format(file_name, file_length))
+                res_data = success_res
 
 
 
-    #         # if mode == 'PUBLIC':
-    #         #     message = '{}[{}]: {}'.format(claims['username'], time_stamp, j_parsed['msg'])
-    #         #     for user in clients:
-    #         #         try:
-    #         #             sock.sendto(json.dumps({
-    #         #                 'status': '200',
-    #         #                 'msg': message
-    #         #             }).encode('ascii'), clients[user])
-    #         #         except:
-    #         #             del clients[user]
-    #         #     res_data = json.dumps({
-    #         #         'status': '200',
-    #         #         'msg': ''
-    #         #     })
-    #         # elif mode == 'TO':
-    #         #     message = '{}->{}[{}]: {}'.format(claims['username'], j_parsed['username'], time_stamp, j_parsed['msg'])
-    #         #     try:
-    #         #         sock.sendto(json.dumps({
-    #         #             'status': '200',
-    #         #             'msg': message
-    #         #         }).encode('ascii'), clients[j_parsed['username']])
-    #         #         res_data = json.dumps({
-    #         #             'status': '200',
-    #         #             'msg': message
-    #         #         })
-    #         #     except:
-    #         #         del clients[user]
-    #         #         res_data = json.dumps({
-    #         #             'status': '404',
-    #         #             'msg': 'target user offline'
-    #         #         })
+            # if mode == 'PUBLIC':
+            #     message = '{}[{}]: {}'.format(claims['username'], time_stamp, j_parsed['msg'])
+            #     for user in clients:
+            #         try:
+            #             sock.sendto(json.dumps({
+            #                 'status': '200',
+            #                 'msg': message
+            #             }).encode('ascii'), clients[user])
+            #         except:
+            #             del clients[user]
+            #     res_data = json.dumps({
+            #         'status': '200',
+            #         'msg': ''
+            #     })
+            # elif mode == 'TO':
+            #     message = '{}->{}[{}]: {}'.format(claims['username'], j_parsed['username'], time_stamp, j_parsed['msg'])
+            #     try:
+            #         sock.sendto(json.dumps({
+            #             'status': '200',
+            #             'msg': message
+            #         }).encode('ascii'), clients[j_parsed['username']])
+            #         res_data = json.dumps({
+            #             'status': '200',
+            #             'msg': message
+            #         })
+            #     except:
+            #         del clients[user]
+            #         res_data = json.dumps({
+            #             'status': '404',
+            #             'msg': 'target user offline'
+            #         })
 
 
     sock.sendto(res_data.encode('ascii'), address)   

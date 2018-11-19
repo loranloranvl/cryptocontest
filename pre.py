@@ -44,12 +44,3 @@ def select(sql):
 
 db_connect()
 
-success_res = json.dumps({
-    'status': '200',
-    'msg': ''
-})
-
-error_res = lambda msg: json.dumps({
-    'status': '200',
-    'msg': msg
-})

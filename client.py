@@ -11,20 +11,19 @@ import PyQt5.QtGui as qg
 from PyQt5.QtCore import Qt
 
 MAX_BYTES = 4096
-jwt = None
+jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.connect(('127.0.0.1', 51742))
-
+gui = None
 # print(sock.recvfrom(4096))
+
 
 def layoutCenter(box, *items):
     box.addStretch(1)
     for item in items:
-        if repr(type(item)) == "<class 'PyQt5.QtWidgets.QLabel'>":
-            box.addWidget(item)
-        if repr(type(item)) == "<class 'PyQt5.QtWidgets.QHBoxLayout'>":
-            box.addLayout(item)
+        box.addWidget(item)
     box.addStretch(1)
+
 
 class QtGui(qw.QWidget):
     def __init__(self):
@@ -32,11 +31,170 @@ class QtGui(qw.QWidget):
         self.initUI()
 
     def initUI(self):
+        # combo = qw.QComboBox(self)
+        # combo.addItem("UbuntuUbuntuUbuntuUbuntu")
+        # combo.addItem("Mandriva")
+        # combo.addItem("Fedora")
+        # combo.addItem("Arch")
+        # combo.addItem("Gentoo")
+
+        # combo.setStyleSheet('''
+        #     padding: 5px 8px;
+        #     border: 1.5px solid #eee;
+        #     color: #333;
+        #     font-size: 25px;
+        # ''')
+
+        # combo.move(50, 50)
+
+        lLabel = qw.QLabel("Upload New Files")
+        lLabelHbox = qw.QHBoxLayout()
+        layoutCenter(lLabelHbox, lLabel)
+
+        myBold = qg.QFont()
+        myBold.setBold(True)
+
+        rLabel = qw.QLabel("Available Files")
+        rLabelHbox = qw.QHBoxLayout()
+        layoutCenter(rLabelHbox, rLabel)
+
+        for label in [lLabel, rLabel]:
+            label.setStyleSheet('''
+                color: #333;
+                font-size: 60px;
+                font-family: Maiandra GD;
+            ''')
+            label.setFont(myBold)
+
+        lSelect = qw.QPushButton("Select New File")
+        lSelectHbox = qw.QHBoxLayout()
+        layoutCenter(lSelectHbox, lSelect)
+        lSelect.setStyleSheet('''
+            QPushButton {
+                color: #666;
+                border: 20px dashed #ddd;
+                padding: 50px 42px;
+                font-size: 50px;
+                font-family: Maiandra GD;
+                margin-bottom: 15px;
+            }
+            QPushButton:hover {
+                color: #333;
+                border-color: #ccc;
+            }
+        ''')
+        lSelect.clicked.connect(self.handleSelect)
+
+        self.lFile = qw.QLabel("")
+        self.lFile.setStyleSheet('''
+            QLabel {
+                font-family: Maiandra GD;
+            }
+        ''')
+        lFileHbox = qw.QHBoxLayout()
+        layoutCenter(lFileHbox, self.lFile)
+
+        rFile = qw.QLabel("How to zhuangbi.pdf")
+        rFileHbox = qw.QHBoxLayout()
+        layoutCenter(rFileHbox, rFile)
+
+        for fileLabel in [self.lFile, rFile]:
+            fileLabel.setStyleSheet('''
+                color: #444;
+                font-size: 30px;
+                font-family: Maiandra GD;
+            ''')
+
+        lBtn = qw.QPushButton("Upload File")
+        lBtnHbox = qw.QHBoxLayout()
+        layoutCenter(lBtnHbox, lBtn)
+        lBtn.clicked.connect(self.handleUpload)
+
+        rBtn = qw.QPushButton("Request File")
+        rBtnHbox = qw.QHBoxLayout()
+        layoutCenter(rBtnHbox, rBtn)
+
+        for btn in [lBtn, rBtn]:
+            btn.setStyleSheet('''
+                QPushButton {
+                    border: none;
+                    padding: 12px 18px;
+                    font-family: Maiandra GD;
+                    font-size: 35px;
+                    color: white;
+                    background-color: #33adff;
+                }
+                QPushButton:hover {
+                    background-color: #1aa3ff;
+                }
+            ''')
+
+        for btn in [lSelect, lBtn, rBtn]:
+            btn.setCursor(qg.QCursor(Qt.PointingHandCursor))
+
+        lVbox = qw.QVBoxLayout()
+        lVbox.addLayout(lLabelHbox)
+        lVbox.addStretch(1)
+        lVbox.addLayout(lSelectHbox)
+        lVbox.addLayout(lFileHbox)
+        lVbox.addStretch(1)
+        lVbox.addLayout(lBtnHbox)
+        lVbox.addStretch(1)
+
+        rVbox = qw.QVBoxLayout()
+        rVbox.addLayout(rLabelHbox)
+        rVbox.addStretch(1)
+        rVbox.addLayout(rFileHbox)
+        rVbox.addStretch(5)
+        rVbox.addLayout(rBtnHbox)
+        rVbox.addStretch(1)
+
+        mSeperator = qw.QPushButton('')
+        mSeperator.setStyleSheet('''
+            width: 0;
+            height: 500px;
+            border-left: 2px solid #f3f3f3;
+            border-right: 2px solid #f3f3f3;
+            border-top: none;
+            border-bottom: none;
+        ''')
+        mVbox = qw.QVBoxLayout()
+        layoutCenter(mVbox, mSeperator)
+
+        hhbox = qw.QHBoxLayout()
+        hhbox.addLayout(lVbox)
+        hhbox.addLayout(mVbox)
+        hhbox.addLayout(rVbox)
+
+        self.statuses = []
+        for i in range(2):
+            icon = qw.QLabel()
+            icon.setPixmap(qg.QPixmap("img/blank.png"))
+            text = qw.QLabel('')
+            text.setStyleSheet('''
+                color: #666;
+                font-size: 32px;
+            ''')
+            hbox = qw.QHBoxLayout()
+            layoutCenter(hbox, icon, text)
+            self.statuses.append((hbox, icon, text))
+
+        self.clearStatuses()
+
+        vbox = qw.QVBoxLayout()
+        vbox.addStretch(1)
+        vbox.addLayout(hhbox, 18)
+        for status in self.statuses:
+            vbox.addLayout(status[0])
+        vbox.addStretch(1)
+
+        self.setLayout(vbox)
+
         width = 1200
         height = width / 1.618
         self.setGeometry(300, 90, width, height)
         self.setWindowTitle('D3CRYPT')
-        self.setWindowIcon(qg.QIcon('img/key.png'))
+        self.setWindowIcon(qg.QIcon('img/bitbug.ico'))
         self.setStyleSheet("background-color: white;")
 
         qtRectangle = self.frameGeometry()
@@ -45,6 +203,68 @@ class QtGui(qw.QWidget):
         self.move(qtRectangle.topLeft())
 
         self.show()
+
+    def changeStatus(self, index, text, icon):
+        l = len(text)
+        left = True
+        for i in range(26 - l):
+            if left:
+                text = ' ' + text
+            else:
+                text += ' '
+            left = not left
+        status = self.statuses[index]
+        status[1].setPixmap(qg.QPixmap("img/%s.png" % icon))
+        status[2].setText(text)
+
+    def clearStatuses(self):
+        self.changeStatus(0, 'server currently connected', 'link')
+        self.changeStatus(1, '', 'blank')
+
+    def handleSelect(self):
+        self.clearStatuses()
+        fname = qw.QFileDialog.getOpenFileName(self, 'Open file', '.')
+        if fname[0]:
+            self.selectedFile = fname[0]
+            self.lFile.setText(fname[0].split('/')[-1])
+
+    def handleUpload(self):
+        self.clearStatuses()
+        try:
+            with open(self.selectedFile, 'rb') as f:
+                file_length = len(f.read())
+        except AttributeError:
+            self.changeStatus(1, 'select your file first', 'wrong')
+            return
+        req_data = json.dumps({
+            'jwt': jwt,
+            'mode': 'UP',
+            'length': file_length,
+            'name': self.selectedFile.split('/')[-1]
+        })
+
+        self.changeStatus(1, 'uploading selected file', 'loader')
+        sock.send(req_data.encode('ascii'))
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+        if res_data['status'] == '201':
+            sent_len = 0
+            with open(self.selectedFile, 'rb') as f:
+                while sent_len < file_length:
+                    sock.send(f.read(MAX_BYTES))
+                    sent_len += MAX_BYTES
+        else:
+            self.changeStatus(1, res_data['msg'], 'wrong')
+            return
+
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+        if res_data['status'] == '200':
+            self.changeStatus(1, 'file successfully uploaded', 'check')
+
+
+
+
 
 class QtGui2(qw.QWidget):
     def __init__(self):
@@ -72,7 +292,7 @@ class QtGui2(qw.QWidget):
                     border: none;
                     font-weight: 1000;
                     font-size: 60px;
-                    font-family: fort;
+                    font-family: Maiandra GD;
                 }
                 QPushButton:hover {
                     color: #111;
@@ -98,6 +318,7 @@ class QtGui2(qw.QWidget):
             hbox = qw.QHBoxLayout()
             layoutCenter(hbox, icon, text)
             self.statuses.append((hbox, icon, text))
+        self.clearStatuses()
 
         vbox = qw.QVBoxLayout()
         vbox.addStretch(3)
@@ -116,7 +337,7 @@ class QtGui2(qw.QWidget):
         height = width / 1.618
         self.setGeometry(300, 90, width, height)
         self.setWindowTitle('D3CRYPT')
-        self.setWindowIcon(qg.QIcon('img/key.png'))
+        self.setWindowIcon(qg.QIcon('img/bitbug.ico'))
         self.setStyleSheet("background-color: white;")
 
         # center align
@@ -127,93 +348,49 @@ class QtGui2(qw.QWidget):
 
         self.show()
 
-    # def handleRegister(self, e):
-    #     self.dialog = qw.QDialog()
-    #     self.dialog.setStyleSheet("background-color: white;")
-    #     self.dialog.setWindowIcon(qg.QIcon('img/query.png'))
-    #     self.dialog.setWindowTitle('User Name Input')
+    def changeStatus(self, index, text, icon):
+        l = len(text)
+        for i in range(25 - l):
+            text += ' '
+        status = self.statuses[index]
+        status[1].setPixmap(qg.QPixmap("img/%s.png" % icon))
+        status[2].setText(' ' + text)
 
-    #     label = qw.QLabel("Enter your user name")
-    #     label.setStyleSheet('''
-    #         color: #333;
-    #         font-size: 26px;
-    #     ''')
+    def clearStatuses(self):
+        self.changeStatus(0, 'client now established', 'link')
+        for i in range(1, len(self.statuses)):
+            self.changeStatus(i, '', 'blank')
 
-    #     self.usernameInput = qw.QLineEdit()
-    #     self.usernameInput.setStyleSheet('''
-    #         padding: 5px 8px;
-    #         font-size: 22px;
-    #         color: #333;
-    #         margin-left: 10px;
-    #         text-align: center;
-    #     ''')
-
-    #     btn = qw.QPushButton("Submit", self)
-    #     btn.setStyleSheet('''
-    #         background-color: #80aaff;
-    #         color: white;
-    #         margin: 25px;
-    #         width: 140px;
-    #         height: 30px;
-    #         padding: 10px 24px;
-    #         border: none;
-    #         font-weight: 1000;
-    #         font-size: 22px;
-    #     ''')
-
-    #     labelHbox = qw.QHBoxLayout()
-    #     layoutCenter(labelHbox, label)
-
-    #     inputHbox = qw.QHBoxLayout()
-    #     layoutCenter(inputHbox, self.usernameInput)
-
-    #     btnHbox = qw.QHBoxLayout()
-    #     layoutCenter(btnHbox, btn)
-
-    #     vbox = qw.QVBoxLayout()
-    #     vbox.addStretch(1)
-    #     vbox.addLayout(labelHbox)
-    #     vbox.addLayout(inputHbox)
-    #     vbox.addLayout(btnHbox)
-    #     # for widget in [label, self.usernameInput, btn]:
-    #     #     hbox = qw.QHBoxLayout()
-    #     #     layoutCenter(hbox, widget)
-    #     #     vbox.addLayout(hbox)
-    #     vbox.addStretch(1)
-    #     self.dialog.setLayout(vbox)
-
-    #     width = 400
-    #     height = width / 1.618
-    #     self.dialog.setGeometry(720, 420, width, height)
-    #     self.dialog.exec_()
 
     def handleRegister(self, e):
         self.clearStatuses()
         username, ok = qw.QInputDialog.getText(self, 'name', 
                    'Enter your name:')
-        if ok:
-            keys = ecckeygen.generate()
-            self.changeStatus(0, 'sm2 key-pair generated', 'check')
+        if not ok:
+            return
 
-            self.changeStatus(1, 'posting public key', 'loader')
-            req_data = json.dumps({
-                'mode': 'REGISTER',
-                'username': username,
-                'pubkey': keys['pubkey']
-            })
-            sock.send(req_data.encode('ascii'))
-            res = sock.recv(MAX_BYTES).decode('ascii')
-            res_data = json.loads(res)
-            if res_data['status'] == '200':
-                self.changeStatus(1, 'public key posted', 'check')
-                self.changeStatus(2, 'successfully registed', 'check')
-                with open('%s_keys.json' % username, 'w') as f:
-                    f.write(json.dumps({
-                        'username': username,
-                        **keys
-                    }))
-            else:
-                self.changeStatus(1, res_data['msg'], 'wrong')
+        keys = ecckeygen.generate()
+        self.changeStatus(0, 'sm2 key-pair generated', 'check')
+
+        self.changeStatus(1, 'posting public key', 'loader')
+        req_data = json.dumps({
+            'mode': 'REGISTER',
+            'username': username,
+            'pubkey': keys['pubkey']
+        })
+        sock.send(req_data.encode('ascii'))
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+        if res_data['status'] == '200':
+            self.changeStatus(1, 'public key posted', 'check')
+            self.changeStatus(2, 'successfully registed', 'check')
+            with open('%s_keys.json' % username, 'w') as f:
+                f.write(json.dumps({
+                    'username': username,
+                    **keys
+                }))
+        else:
+            self.changeStatus(1, res_data['msg'], 'wrong')
 
     def handleLogin(self, e):
         global jwt
@@ -233,11 +410,14 @@ class QtGui2(qw.QWidget):
                 with open(filename, 'r') as f:
                     keys = json.loads(f.read())
         if not found:
-            self.changeStatus(0, 'keys.json not found', 'question')
-            self.changeStatus(1, 'please select it yourself', 'question')
+            self.changeStatus(1, 'keys.json not found', 'question')
+            self.changeStatus(2, 'please select it yourself', 'question')
             # time.sleep(500)
             fname = qw.QFileDialog.getOpenFileName(self, 'select keys.json', '.')
-            if fname[0] and filename == ("%s_keys.json" % username):
+            if not fname[0]:
+                self.clearStatuses()
+                return
+            if filename == ("%s_keys.json" % username):
                 with open(fname[0], 'r') as f:
                     keys = json.loads(f.read())
             else:
@@ -263,25 +443,15 @@ class QtGui2(qw.QWidget):
             self.changeStatus(0, 'signature verified', 'check')
             self.changeStatus(1, 'successfully logged in', 'check')
             jwt = res_data['jwt']
+            self.close()
+            gui.show()
         else:
             self.changeStatus(1, res_data['msg'], 'wrong')
 
 
-    def changeStatus(self, index, text, icon):
-        l = len(text)
-        for i in range(25 - l):
-            text += ' '
-        status = self.statuses[index]
-        status[1].setPixmap(qg.QPixmap("img/%s.png" % icon))
-        status[2].setText(' ' + text)
-
-    def clearStatuses(self):
-        for i in range(len(self.statuses)):
-            self.changeStatus(i, '', 'blank')
-
-
 if __name__ == '__main__':
     app = qw.QApplication(sys.argv)
-    gui = QtGui2()
-
-    sys.exit(app.exec_())
+    gui_index = QtGui2()
+    gui = QtGui()
+    gui.close()
+    app.exec_()
