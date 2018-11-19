@@ -18,4 +18,4 @@ $ python chain.py [file_path].enc
 (lib) gmssl 国密sm2/sm3/sm4加密函数  
 #### 数据库文件（伪）
 database/keypairs.csv 存放用户id和公私钥对，实际应用中私钥不应该存于数据库  
-database/info.csv 临时文件 模拟从decrypt.py到chain.py的浏览者信息的信道  
+database/info.csv 临时文件 模拟从decrypt.py到chain.py的浏览者信息的信道-.-  
