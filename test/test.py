@@ -1,33 +1,37 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QWidget, QCheckBox, QApplication
+from PyQt5.QtCore import Qt
+import sys
 
-class window(QMainWindow):
-    def __init__(self, parent=None):
-        super(window, self).__init__(parent)
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-        self.ui.Open.clicked.connect(self.openwindow)
-        self.openedwin = []
+class Example(QWidget):
+    
+    def __init__(self):
+        super().__init__()
+        
+        self.initUI()
+        
+        
+    def initUI(self):      
 
-    def openwindow(self):
-        windownum = self.ui.windownum.value()
-        if windownum != 0:
-            if self.openedwin != []:
-                for window in self.openedwin:
-                    window.close()
-            for repeat in range(windownum):
-                opennewwindow = newwindow(self)
-                # print("opennewwindow:", opennewwindow)
-                self.openedwin.append(opennewwindow)
-                opennewwindow.show()
-        # print("self.openedwin:", self.openedwin)
-
-
-class newwindow(QMainWindow):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-
-if __name__ == "__main__":
-    app = QApplication([])
-    gui = window()
-    gui.show()
-    app.exec_()
+        cb = QCheckBox('Show title', self)
+        cb.move(20, 20)
+        cb.toggle()
+        cb.stateChanged.connect(self.changeTitle)
+        
+        self.setGeometry(300, 300, 250, 150)
+        self.setWindowTitle('QCheckBox')
+        self.show()
+        
+        
+    def changeTitle(self, state):
+      
+        if state == Qt.Checked:
+            self.setWindowTitle('QCheckBox')
+        else:
+            self.setWindowTitle(' ')
+            
+        
+if __name__ == '__main__':
+    
+    app = QApplication(sys.argv)
+    ex = Example()
+    sys.exit(app.exec_())

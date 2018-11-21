@@ -57,5 +57,6 @@ def parse_info(info_):
         'time_stamp': int.from_bytes(info_[0:4], endianness),
         'signature': info_[4:68].hex(),
         'ip_addr': int.from_bytes(info_[68:72], endianness),
-        'id': int.from_bytes(info_[72:78], endianness)
+        # 'id': int.from_bytes(info_[72:78], endianness)
+        'id': info_[72:78].decode('ascii')
     }

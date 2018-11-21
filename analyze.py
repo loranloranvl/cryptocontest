@@ -25,13 +25,15 @@ def analyze(file_path):
     visited = data['flags'][0] >= 8 * 16
     result += 'visited ' + str(visited) + '\n'
     for key in data:
+        if key == 'flags':
+            continue
         item = data[key]
         if len(item) > 32:
             result += '{} of length {}'.format(key, len(item))
         elif len(item) > 6:
             result += '{} {}... of length {}'.format(key, item[0:6].hex(), len(item))
         else:
-            result += key + ' ' + bin(int.from_bytes(data[key], 'big'))[2:]
+            result += key + ' ' + str(int.from_bytes(data[key], 'big'))
         result += '\n'
 
     result += '\n'
@@ -59,6 +61,7 @@ class QtGui(QWidget):
             font-size: 35px;
             font-weight: 700;
             margin-top: 20px;
+            font-family: Maiandra GD;
         ''')
 
         self.fileBtn = QPushButton('Select File', self)
@@ -73,6 +76,7 @@ class QtGui(QWidget):
             border: none;
             font-weight: 1000;
             font-size: 22px;
+            font-family: Maiandra GD;
         ''')
 
         self.structureText = QTextEdit()
@@ -112,7 +116,7 @@ class QtGui(QWidget):
 
         self.setLayout(vbox)
 
-        self.setGeometry(500, 90, 800, 500)
+        self.setGeometry(100, 90, 800, 500)
         self.setWindowTitle('D3CRYPT analyzer')
         self.setWindowIcon(QIcon('img/analyze.png'))
         self.setStyleSheet("background-color: white;")

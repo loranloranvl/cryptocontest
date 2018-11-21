@@ -5,6 +5,7 @@ import time
 import sys
 import ecckeygen
 import os
+import decrypt
 from gmssl import func, sm2
 import PyQt5.QtWidgets as qw
 import PyQt5.QtGui as qg
@@ -15,6 +16,7 @@ jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.connect(('127.0.0.1', 51742))
 gui = None
+keys = None
 # print(sock.recvfrom(4096))
 
 
@@ -28,25 +30,14 @@ def layoutCenter(box, *items):
 class QtGui(qw.QWidget):
     def __init__(self):
         super().__init__()
+        self.statuses = []
+        self.selected = 'outline.pdf'
+        self.files = []
+
         self.initUI()
+        self.getFileList()
 
     def initUI(self):
-        # combo = qw.QComboBox(self)
-        # combo.addItem("UbuntuUbuntuUbuntuUbuntu")
-        # combo.addItem("Mandriva")
-        # combo.addItem("Fedora")
-        # combo.addItem("Arch")
-        # combo.addItem("Gentoo")
-
-        # combo.setStyleSheet('''
-        #     padding: 5px 8px;
-        #     border: 1.5px solid #eee;
-        #     color: #333;
-        #     font-size: 25px;
-        # ''')
-
-        # combo.move(50, 50)
-
         lLabel = qw.QLabel("Upload New Files")
         lLabelHbox = qw.QHBoxLayout()
         layoutCenter(lLabelHbox, lLabel)
@@ -93,17 +84,34 @@ class QtGui(qw.QWidget):
         ''')
         lFileHbox = qw.QHBoxLayout()
         layoutCenter(lFileHbox, self.lFile)
+        self.lFile.setStyleSheet('''
+            color: #333;
+            font-size: 30px;
+            font-family: Maiandra GD;
+        ''')
 
-        rFile = qw.QLabel("How to zhuangbi.pdf")
-        rFileHbox = qw.QHBoxLayout()
-        layoutCenter(rFileHbox, rFile)
-
-        for fileLabel in [self.lFile, rFile]:
-            fileLabel.setStyleSheet('''
-                color: #444;
-                font-size: 30px;
-                font-family: Maiandra GD;
+        for i in range(5):
+            icon = qw.QLabel()
+            icon.setPixmap(qg.QPixmap("img/blank.png"))
+            rfile = qw.QPushButton('')
+            rfile.setCursor(qg.QCursor(Qt.PointingHandCursor))
+            rfile.clicked.connect(lambda: self.handleRfileSelect(1))
+            hbox = qw.QHBoxLayout()
+            layoutCenter(hbox, rfile, icon)
+            rfile.setStyleSheet('''
+                QPushButton {
+                    color: #666;
+                    font-size: 40px;
+                    margin-bottom: -2px;
+                    background-color: white;
+                    border: none;
+                    font-family: Maiandra GD;
+                }
+                QPushButton:hover {
+                    color: #444;
+                }
             ''')
+            self.files.append((hbox, rfile, icon))
 
         lBtn = qw.QPushButton("Upload File")
         lBtnHbox = qw.QHBoxLayout()
@@ -111,6 +119,7 @@ class QtGui(qw.QWidget):
         lBtn.clicked.connect(self.handleUpload)
 
         rBtn = qw.QPushButton("Request File")
+        rBtn.clicked.connect(self.handleRequest)
         rBtnHbox = qw.QHBoxLayout()
         layoutCenter(rBtnHbox, rBtn)
 
@@ -144,8 +153,9 @@ class QtGui(qw.QWidget):
         rVbox = qw.QVBoxLayout()
         rVbox.addLayout(rLabelHbox)
         rVbox.addStretch(1)
-        rVbox.addLayout(rFileHbox)
-        rVbox.addStretch(5)
+        for file in self.files:
+            rVbox.addLayout(file[0])
+        rVbox.addStretch(1)
         rVbox.addLayout(rBtnHbox)
         rVbox.addStretch(1)
 
@@ -166,7 +176,6 @@ class QtGui(qw.QWidget):
         hhbox.addLayout(mVbox)
         hhbox.addLayout(rVbox)
 
-        self.statuses = []
         for i in range(2):
             icon = qw.QLabel()
             icon.setPixmap(qg.QPixmap("img/blank.png"))
@@ -228,6 +237,36 @@ class QtGui(qw.QWidget):
             self.selectedFile = fname[0]
             self.lFile.setText(fname[0].split('/')[-1])
 
+    def handleRfileSelect(self, index):
+        print(index)
+        # self.selected = index
+        for file in self.files:
+            file[1].setStyleSheet('''
+                QPushButton {
+                    color: #333;
+                    font-size: 40px;
+                    margin-bottom: -2px;
+                    background-color: white;
+                    border: none;
+                    font-family: Maiandra GD;
+                }
+            ''')
+            file[2].setPixmap(qg.QPixmap('img/blank.png'))
+        self.files[index][1].setStyleSheet('''
+            QPushButton {
+                color: #666;
+                font-size: 40px;
+                margin-bottom: -2px;
+                background-color: white;
+                border: none;
+                font-family: Maiandra GD;
+            }
+            QPushButton:hover {
+                color: #444;
+            }
+        ''')
+        self.files[index][2].setPixmap(qg.QPixmap('img/select.png'))
+
     def handleUpload(self):
         self.clearStatuses()
         try:
@@ -261,9 +300,60 @@ class QtGui(qw.QWidget):
         res_data = json.loads(res)
         if res_data['status'] == '200':
             self.changeStatus(1, 'file successfully uploaded', 'check')
+            self.getFileList()
 
+    def getFileList(self):
+        self.clearStatuses()
+        self.changeStatus(1, 'fetching file list', 'loader')
+        req_data = json.dumps({
+            'mode': 'FILELIST',
+            'jwt': jwt    
+        })
+        sock.send(req_data.encode('ascii'))
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+        if res_data['status'] == '200':
+            print(res_data['names'])
+            self.changeStatus(1, 'file list updated', 'check')
 
+            for i, v in enumerate(res_data['names']):
+                self.files[i][1].setText(v)
 
+    def handleRequest(self):
+        req_data = json.dumps({
+            'mode': 'DOWN',
+            'jwt': jwt,
+            'name': self.selected
+        })
+        sock.send(req_data.encode('ascii'))
+
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+
+        if res_data['status'] == '200':
+            dec_key = res_data['enc_pvtkey']
+            file_length = int(res_data['length'])
+            file_data = b''
+            while len(file_data) < file_length:
+                file_data += sock.recv(MAX_BYTES)
+
+        res = sock.recv(MAX_BYTES).decode('ascii')
+        res_data = json.loads(res)
+
+        if res_data['status'] == '200':
+            info_raw = {
+                'id': keys['username'],
+                'private key': keys['pvtkey'],
+                'decrypt key': dec_key
+            }
+            pv = decrypt.decrypt(info_raw, file_data)
+            req_data = json.dumps({
+                'mode': 'CHAIN',
+                'jwt': jwt,
+                'name': self.selected,
+                'pv': pv
+            })
+            sock.send(req_data.encode('ascii'))
 
 
 class QtGui2(qw.QWidget):
@@ -400,7 +490,7 @@ class QtGui2(qw.QWidget):
         if not ok:
             return
 
-        keys = None
+        global keys
         self.changeStatus(0, 'searching local keys', 'loading')
         # time.sleep(500)
         found = False

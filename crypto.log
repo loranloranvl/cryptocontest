@@ -1,20 +1,11 @@
-2018-11-19 12:02:05,119 - crypto server established
-2018-11-19 12:02:15,575 - the server received {"jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg", "mode": "UP", "length": 1757, "name": "auth.py"}
-2018-11-19 12:02:15,577 - receiving file from 127.0.0.1:61395
-2018-11-19 12:02:15,578 - auth.py received total length 1757 bytes
-2018-11-19 12:02:15,818 - database file list updated
-2018-11-19 12:02:15,818 - the server sent {"status": "200", "msg": ""}
-2018-11-19 12:03:42,936 - the server received {"jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg", "mode": "UP", "length": 933, "name": "ecckeygen.py"}
-2018-11-19 12:03:42,937 - receiving file from 127.0.0.1:52708
-2018-11-19 12:03:42,938 - ecckeygen.py received total length 933 bytes
-2018-11-19 12:03:43,175 - database file list updated
-2018-11-19 12:03:43,176 - the server sent {"status": "200", "msg": ""}
-2018-11-19 12:10:29,559 - the server received {"mode": "REGISTER", "username": "zeox", "pubkey": "8243f81cefcebf06c2f23ec853813090007f4e3508a3e64df90dc8b7184e46aff93697769eb1bc9cdf91e1c54130029e6ecb53001b5546a0ee15889244037a4a"}
-2018-11-19 12:10:29,646 - zeox registered with pubkey 8243f81cefcebf06c2f23ec853813090007f4e3508a3e64df90dc8b7184e46aff93697769eb1bc9cdf91e1c54130029e6ecb53001b5546a0ee15889244037a4a
-2018-11-19 12:10:29,647 - the server sent {"status": "200", "msg": "successfully registered"}
-2018-11-19 12:10:49,020 - the server received {"mode": "LOGIN", "username": "zeox", "timeval": "1542600649", "signature": "ed641c55d44082b90843f16ac4f05ac637a9abfccf37559be4da69964ec8ee74ccc16e7d72e56128f0763a3cd94e1ad53a0dec25a9c04f061781289e61f5cb30"}
-2018-11-19 12:10:49,047 - zeox logged in
-2018-11-19 12:10:49,048 - the server sent {"status": "200", "msg": "successfully logged in", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6Inplb3giLCJwdWJrZXkiOiI4MjQzZjgxY2VmY2ViZjA2YzJmMjNlYzg1MzgxMzA5MDAwN2Y0ZTM1MDhhM2U2NGRmOTBkYzhiNzE4NGU0NmFmZjkzNjk3NzY5ZWIxYmM5Y2RmOTFlMWM1NDEzMDAyOWU2ZWNiNTMwMDFiNTU0NmEwZWUxNTg4OTI0NDAzN2E0YSJ9.Bj5il_Fb3SNoYxwzyozp7_d-8x4QFuMVvBY8_IDMbEA"}
-2018-11-19 12:15:35,375 - the server received {"mode": "LOGIN", "username": "loran", "timeval": "1542600935", "signature": "ce89296406c3e229b7d80449ce1824803aca9895e531b5d83a430b9efdc0df975fd47bbd456eee6df0763bcf9275ef8b86144f7f2bcaf02054f786d312c1e934"}
-2018-11-19 12:15:35,404 - loran logged in
-2018-11-19 12:15:35,405 - the server sent {"status": "200", "msg": "successfully logged in", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"}
+2018-11-20 17:43:49,218 - crypto server established
+2018-11-20 17:43:51,346 - the server received {"mode": "FILELIST", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"}
+2018-11-20 17:43:51,442 - the server sent {"status": "200", "names": ["encryptprocedure.pdf", "outline.pdf"]}
+2018-11-20 17:43:54,816 - the server received {"mode": "LOGIN", "username": "loran", "timeval": "1542707034", "signature": "79fac3dec82acd8ea4f362e2313792c71b0fe3ad55ea17db8635db1bd344c5d25228d2ba89b9d835779504cb5dee4f31ffc15c437ddc6f35baa273bd4819c184"}
+2018-11-20 17:43:54,893 - loran logged in
+2018-11-20 17:43:54,894 - the server sent {"status": "200", "msg": "successfully logged in", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"}
+2018-11-20 17:43:57,901 - the server received {"mode": "DOWN", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg", "name": "outline.pdf"}
+2018-11-20 17:43:57,905 - outline.pdf sent total length 48249 bytes
+2018-11-20 17:43:57,905 - the server sent {"status": "200", "msg": ""}
+2018-11-20 17:44:00,172 - the server received {"mode": "CHAIN", "jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg", "name": "outline.pdf", "pv": ["b'[\\xf3\\xd7]'", "b'\\xcd9 q\\x8c\\xfb\\x05,\\xbc\\x98\\x9bP\\xd9\\xfd\\xf4\\x88\\xfb\\xee\\x1a\\n\\xd5\\xfa\\x06\\x8fg\\xd6\\x14Px\\xb8\\x84\\rw\\x9fw`4z\\xce\\x86\\xc8\\xa6\\x14HQ\\xf4\\xa5\\x0b\\x03\\xd3$\\xfc\\x04\\x93\\xb5rxi\\xfd#;\\xa9\\xba+'", "b'\\xc0\\xa8\\xc7e'", "b'loran'"]}
+2018-11-20 17:44:00,191 - the server sent {"status": "200", "msg": ""}

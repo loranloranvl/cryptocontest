@@ -7,6 +7,7 @@ import argparse
 import encrypt
 import json
 import pre
+import chain
 from gmssl import sm2
 
 success_res = json.dumps({
@@ -54,6 +55,7 @@ while True:
         except:
             res_data = error_res('you have not logged in')
         else:
+            file_progress = 'collecting {}: {}/{} bytes   % {:.2f}'
             if mode == 'UP':
                 file_length = int(j_parsed['length'])
                 file_name = j_parsed['name']
@@ -67,10 +69,10 @@ while True:
 
                 # collect file fragments
                 while len(file_data) < file_length:
-                    file_progress = '\x1b[2K\rcollecting {}: {}/{} bytes   % {:.2f}'
+                    # \x1b[2K\r
                     percent = 100 * len(file_data) / file_length
                     print(file_progress \
-                        .format(file_name, len(file_data), file_length, percent), end='')
+                        .format(file_name, len(file_data), file_length, percent))
 
                     file_frag, up_addr = sock.recvfrom(MAX_BYTES)
                     if address == up_addr:
@@ -105,7 +107,7 @@ while True:
 
                 res_data = json.dumps({
                     'status': '200',
-                    'enc_pvtkey': sm2_crypt.encrypt(selected[0]),
+                    'enc_pvtkey': selected[0],
                     'length': file_length
                 })
                 sock.sendto(res_data.encode('ascii'), address)
@@ -114,8 +116,9 @@ while True:
                 sent_len = 0
                 with open('documents/%s.enc' % file_name, 'rb') as f:
                     while sent_len < file_length:
+                        percent = 100 * sent_len / file_length
                         print(file_progress \
-                            .format(file_name, len(file_data), file_length, percent), end='')
+                            .format(file_name, sent_len, file_length, percent))
                         sock.sendto(f.read(MAX_BYTES), address) 
                         sent_len += MAX_BYTES
                 print('\x1b[2K', end='\r')
@@ -123,6 +126,25 @@ while True:
                     .format(file_name, file_length))
                 res_data = success_res
 
+            elif mode == 'FILELIST':
+                sql = "SELECT FileName FROM Files"
+                selected = pre.select(sql)
+                res_data = json.dumps({
+                    'status': '200',
+                    'names': [item[0] for item in selected]    
+                })
+
+            elif mode == 'CHAIN':
+                prev_visitor = j_parsed['pv']
+                file_name = j_parsed['name']
+                info = {
+                    'time_stamp': eval(prev_visitor[0]), 
+                    'signature': eval(prev_visitor[1]),
+                    'ip_addr': eval(prev_visitor[2]),
+                    'id': eval(prev_visitor[3])
+                }
+                chain.chain(info, 'documents/%s.enc' % file_name)
+                res_data = success_res
 
 
             # if mode == 'PUBLIC':
