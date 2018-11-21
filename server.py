@@ -48,6 +48,8 @@ while True:
             j_parsed['timeval'], j_parsed['signature'])
         if address not in clients.values():
             clients[j_parsed['username']] = address
+    elif mode == 'TEST':
+        res_data = success_res
     else:
         try: 
             claims = jwt.decode(j_parsed['jwt'].encode('ascii'), 
@@ -91,7 +93,7 @@ while True:
                     INSERT INTO Files (Filename, Uploader, Pubkey, Pvtkey, length)
                     VALUES ('{}', '{}', '{}', '{}', '{}')
                 """.format(file_name, claims['username'], 
-                        enc_result['pubkey'], enc_result['pvtkey'], file_length)
+                        enc_result['pubkey'], enc_result['pvtkey'], len(enc_result['enc']))
                 pre.insert(sql)
                 logging.info('database file list updated')
                 res_data = success_res
@@ -111,6 +113,7 @@ while True:
                     'length': file_length
                 })
                 sock.sendto(res_data.encode('ascii'), address)
+                logging.info('the server sent {}'.format(res_data))
 
                 # fragment and send files
                 sent_len = 0
@@ -121,13 +124,12 @@ while True:
                             .format(file_name, sent_len, file_length, percent))
                         sock.sendto(f.read(MAX_BYTES), address) 
                         sent_len += MAX_BYTES
-                print('\x1b[2K', end='\r')
                 logging.info('{} sent total length {} bytes' \
                     .format(file_name, file_length))
                 res_data = success_res
 
             elif mode == 'FILELIST':
-                sql = "SELECT FileName FROM Files"
+                sql = "SELECT DISTINCT FileName FROM Files"
                 selected = pre.select(sql)
                 res_data = json.dumps({
                     'status': '200',

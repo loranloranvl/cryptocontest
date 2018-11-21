@@ -6,14 +6,23 @@ import sys
 import ecckeygen
 import os
 import decrypt
+from functools import partial
 from gmssl import func, sm2
 import PyQt5.QtWidgets as qw
 import PyQt5.QtGui as qg
 from PyQt5.QtCore import Qt
 
+def recv_except():
+    try:
+        return sock.recv(MAX_BYTES)
+    except (ConnectionResetError, socket.timeout) as e:
+        print('[ERROR]', e)
+        return None
+
 MAX_BYTES = 4096
 jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImxvcmFuIiwicHVia2V5IjoiYjJiZTNiYjY3YWVmYTZlNmJiMjNmN2FkOGFiMTNiYjI1YjE0ZTg1MjAyYzg4NDk1MTg3ZGUwOTY0OGJjNjUzNzNiNzYzNjczM2NkN2Q1Y2I0NmJhN2JkYWEzZThhZGQxZGU3MmFjZWQyMGZhOTE5NjkxNjQ1MGQ1YTYzODg3NGQifQ.AOZyBVVR1litwPYohBdFxUWHYK_rBPhG2A1UKQ7pCkg"
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.settimeout(2)
 sock.connect(('127.0.0.1', 51742))
 gui = None
 keys = None
@@ -30,8 +39,12 @@ def layoutCenter(box, *items):
 class QtGui(qw.QWidget):
     def __init__(self):
         super().__init__()
+
+        # status object at the bottom middle part of the window
         self.statuses = []
-        self.selected = 'outline.pdf'
+
+        # 
+        self.req_filename = ''
         self.files = []
 
         self.initUI()
@@ -93,9 +106,8 @@ class QtGui(qw.QWidget):
         for i in range(5):
             icon = qw.QLabel()
             icon.setPixmap(qg.QPixmap("img/blank.png"))
-            rfile = qw.QPushButton('')
+            rfile = qw.QPushButton('foobarbaz')
             rfile.setCursor(qg.QCursor(Qt.PointingHandCursor))
-            rfile.clicked.connect(lambda: self.handleRfileSelect(1))
             hbox = qw.QHBoxLayout()
             layoutCenter(hbox, rfile, icon)
             rfile.setStyleSheet('''
@@ -231,15 +243,17 @@ class QtGui(qw.QWidget):
         self.changeStatus(1, '', 'blank')
 
     def handleSelect(self):
+        # gray box click handler
         self.clearStatuses()
         fname = qw.QFileDialog.getOpenFileName(self, 'Open file', '.')
         if fname[0]:
             self.selectedFile = fname[0]
             self.lFile.setText(fname[0].split('/')[-1])
 
-    def handleRfileSelect(self, index):
-        print(index)
-        # self.selected = index
+    def handleRfileSelect(self, index, filename):
+        # rfile click handler - display green check icon
+        self.clearStatuses()
+        self.req_filename = filename
         for file in self.files:
             file[1].setStyleSheet('''
                 QPushButton {
@@ -284,8 +298,10 @@ class QtGui(qw.QWidget):
 
         self.changeStatus(1, 'uploading selected file', 'loader')
         sock.send(req_data.encode('ascii'))
-        res = sock.recv(MAX_BYTES).decode('ascii')
-        res_data = json.loads(res)
+        res = recv_except()
+        if res == None:
+            return
+        res_data = json.loads(res.decode('ascii'))
         if res_data['status'] == '201':
             sent_len = 0
             with open(self.selectedFile, 'rb') as f:
@@ -296,8 +312,10 @@ class QtGui(qw.QWidget):
             self.changeStatus(1, res_data['msg'], 'wrong')
             return
 
-        res = sock.recv(MAX_BYTES).decode('ascii')
-        res_data = json.loads(res)
+        res = recv_except()
+        if res == None:
+            return
+        res_data = json.loads(res.decode('ascii'))
         if res_data['status'] == '200':
             self.changeStatus(1, 'file successfully uploaded', 'check')
             self.getFileList()
@@ -305,55 +323,84 @@ class QtGui(qw.QWidget):
     def getFileList(self):
         self.clearStatuses()
         self.changeStatus(1, 'fetching file list', 'loader')
+        for rfile in self.files:
+            rfile[1].setText('')
+            rfile[2].setPixmap(qg.QPixmap("img/blank.png"))
         req_data = json.dumps({
             'mode': 'FILELIST',
             'jwt': jwt    
         })
         sock.send(req_data.encode('ascii'))
-        res = sock.recv(MAX_BYTES).decode('ascii')
+        res = None
+        try:
+            res = sock.recv(MAX_BYTES).decode('ascii')
+        except (ConnectionResetError, socket.timeout) as e:
+            print('[ERROR]:', e)
+            self.clearStatuses()
+            self.changeStatus(0, 'server timeout', 'wrong')
+            return
         res_data = json.loads(res)
         if res_data['status'] == '200':
-            print(res_data['names'])
             self.changeStatus(1, 'file list updated', 'check')
 
             for i, v in enumerate(res_data['names']):
                 self.files[i][1].setText(v)
+                self.files[i][1].clicked.connect(partial(self.handleRfileSelect, i, v))
 
     def handleRequest(self):
+        # request file click handler
+        self.clearStatuses()
+        if self.req_filename == '':
+            self.changeStatus(1, 'choose a file to view', 'wrong')
+            return
         req_data = json.dumps({
             'mode': 'DOWN',
             'jwt': jwt,
-            'name': self.selected
+            'name': self.req_filename
         })
         sock.send(req_data.encode('ascii'))
 
-        res = sock.recv(MAX_BYTES).decode('ascii')
+        self.changeStatus(1, 'sending download request', 'loader')
+        res = None
+        try:
+            res = sock.recv(MAX_BYTES).decode('ascii')
+        except socket.timeout:
+            self.changeStatus(1, 'request timeout', 'wrong')
+            return
         res_data = json.loads(res)
 
         if res_data['status'] == '200':
+            self.changeStatus(1, 'downloading the file', 'loader')
             dec_key = res_data['enc_pvtkey']
             file_length = int(res_data['length'])
             file_data = b''
             while len(file_data) < file_length:
                 file_data += sock.recv(MAX_BYTES)
 
-        res = sock.recv(MAX_BYTES).decode('ascii')
-        res_data = json.loads(res)
+        res = recv_except()
+        if res == None:
+            return
+        res_data = json.loads(res.decode('ascii'))
 
         if res_data['status'] == '200':
+            self.changeStatus(1, 'download completed', 'check')
             info_raw = {
-                'id': keys['username'],
+                'id': keys['username'].ljust(6, ' '),
                 'private key': keys['pvtkey'],
                 'decrypt key': dec_key
             }
             pv = decrypt.decrypt(info_raw, file_data)
+            if type(pv) == str:
+                self.changeStatus(1, pv, 'wrong')
+                return
             req_data = json.dumps({
                 'mode': 'CHAIN',
                 'jwt': jwt,
-                'name': self.selected,
+                'name': self.req_filename,
                 'pv': pv
             })
             sock.send(req_data.encode('ascii'))
+            res = recv_except()
 
 
 class QtGui2(qw.QWidget):
@@ -362,6 +409,7 @@ class QtGui2(qw.QWidget):
         self.initUI()
 
     def initUI(self):
+        self.connected = False
         self.logo = qw.QLabel()
         self.logo.setPixmap(qg.QPixmap("img/logo.png"))
         logoHbox = qw.QHBoxLayout()
@@ -437,6 +485,25 @@ class QtGui2(qw.QWidget):
         self.move(qtRectangle.topLeft())
 
         self.show()
+        self.testLink()
+
+    def testLink(self):
+        self.clearStatuses()
+        req_data = json.dumps({
+            'mode': 'TEST'
+        })
+        sock.send(req_data.encode('ascii'))
+
+        req_data = None
+        try:
+            req_data = sock.recv(MAX_BYTES)
+        except (ConnectionResetError, socket.timeout) as e:
+            print('[ERROR]:', e)
+            self.changeStatus(0, 'connection timeout', 'wrong')
+            self.connected = False
+        else:
+            self.connected = True
+            self.clearStatuses()
 
     def changeStatus(self, index, text, icon):
         l = len(text)
@@ -447,12 +514,15 @@ class QtGui2(qw.QWidget):
         status[2].setText(' ' + text)
 
     def clearStatuses(self):
-        self.changeStatus(0, 'client now established', 'link')
+        if self.connected:
+            self.changeStatus(0, 'client now established', 'link')
         for i in range(1, len(self.statuses)):
             self.changeStatus(i, '', 'blank')
 
 
-    def handleRegister(self, e):
+    def handleRegister(self):
+        if not self.connected:
+            return
         self.clearStatuses()
         username, ok = qw.QInputDialog.getText(self, 'name', 
                    'Enter your name:')
@@ -469,8 +539,10 @@ class QtGui2(qw.QWidget):
             'pubkey': keys['pubkey']
         })
         sock.send(req_data.encode('ascii'))
-        res = sock.recv(MAX_BYTES).decode('ascii')
-        res_data = json.loads(res)
+        res = recv_except()
+        if res == None:
+            return
+        res_data = json.loads(res.decode('ascii'))
         if res_data['status'] == '200':
             self.changeStatus(1, 'public key posted', 'check')
             self.changeStatus(2, 'successfully registed', 'check')
@@ -483,6 +555,8 @@ class QtGui2(qw.QWidget):
             self.changeStatus(1, res_data['msg'], 'wrong')
 
     def handleLogin(self, e):
+        if not self.connected:
+            return
         global jwt
         self.clearStatuses()
         username, ok = qw.QInputDialog.getText(self, 'name', 
@@ -527,8 +601,10 @@ class QtGui2(qw.QWidget):
             'signature': sm2_sign.sign(sign_data, random_hex_str)
         })
         sock.send(req_data.encode('ascii'))
-        res = sock.recv(MAX_BYTES).decode('ascii')
-        res_data = json.loads(res)
+        res = recv_except()
+        if res == None:
+            return
+        res_data = json.loads(res.decode('ascii'))
         if res_data['status'] == '200':
             self.changeStatus(0, 'signature verified', 'check')
             self.changeStatus(1, 'successfully logged in', 'check')

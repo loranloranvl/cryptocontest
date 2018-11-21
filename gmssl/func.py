@@ -50,6 +50,7 @@ def cat_bytes(bytes_dict):
     stream = b''
     for key in bytes_dict:
         stream += bytes_dict[key]
+        print(key, len(bytes_dict[key]))
     return stream
 
 def parse_info(info_):

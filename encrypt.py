@@ -62,7 +62,7 @@ def encrypt(file_data):
         'id': creator_id.to_bytes(6, endianness)
     }
     data['init_info'] = func.cat_bytes(init_info)
-    assert len(data['init_info']) == 4 + 64 + 4 + 6
+    
 
     # digest of digest0 + init_info
     data['digest1'] = sm3.hash(data['digest0'] + data['init_info'])

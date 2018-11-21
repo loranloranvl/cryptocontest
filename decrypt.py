@@ -31,7 +31,6 @@ def decrypt(info_raw, file_enc):
     public_key = ''
     sm2_crypt = sm2.CryptSM2(public_key=public_key, private_key=private_key)
     sm4_key = sm2_crypt.decrypt(data['sm4_key'])
-    print(sm4_key)
 
     # verify digestn
     lf = len(file_enc)

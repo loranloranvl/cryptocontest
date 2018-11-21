@@ -8,9 +8,11 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QHBoxLayout,
     QVBoxLayout,
-    QFileDialog
+    QFileDialog,
+    QLineEdit
 )
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QFont, QCursor
 from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
 from gmssl import sm2, sm3, func
 
@@ -45,7 +47,7 @@ def analyze(file_path):
             person_str, role_str = 'visitor', 'signature'
         ip_str = '.'.join([str((info['ip_addr'] >> i) % 256) for i in range(0, 32, 8)][::-1])
         time_str = time.asctime(time.localtime(info['time_stamp']))
-        result += '{} {} at {}\n'.format(person_str, ip_str, time_str)
+        result += '{} {} with ip addr {} at {}\n'.format(person_str, info['id'], ip_str, time_str)
         result += '{} beginning with {}\n'.format(role_str, info['signature'][0:16].upper())
     return result
 
@@ -58,7 +60,7 @@ class QtGui(QWidget):
         self.structureLabel = QLabel('Enc-File Analyzer')
         self.structureLabel.setStyleSheet('''
             color: #333;
-            font-size: 35px;
+            font-size: 50px;
             font-weight: 700;
             margin-top: 20px;
             font-family: Maiandra GD;
@@ -70,18 +72,17 @@ class QtGui(QWidget):
             background-color: #80aaff;
             color: white;
             margin: 15px;
-            width: 140px;
-            height: 30px;
             padding: 10px 24px;
             border: none;
             font-weight: 1000;
-            font-size: 22px;
+            font-size: 35px;
             font-family: Maiandra GD;
         ''')
+        self.fileBtn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.structureText = QTextEdit()
+        self.structureText = QLabel()
         self.structureText.setStyleSheet('''
-            width: 300px;
+            width: 400px;
             color: #333;
             font-size: 25px;
             font-weight: 400;
@@ -90,7 +91,7 @@ class QtGui(QWidget):
             outline: none;
             border: 1.5px solid powderblue;
         ''')
-        self.structureText.setReadOnly(True)
+        # self.structureText.setReadOnly(True)
 
         labelHbox = QHBoxLayout()
         labelHbox.addStretch(1)
@@ -116,7 +117,7 @@ class QtGui(QWidget):
 
         self.setLayout(vbox)
 
-        self.setGeometry(100, 90, 800, 500)
+        self.setGeometry(300, 20, 1200, 500)
         self.setWindowTitle('D3CRYPT analyzer')
         self.setWindowIcon(QIcon('img/analyze.png'))
         self.setStyleSheet("background-color: white;")
